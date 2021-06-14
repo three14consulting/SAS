@@ -1,0 +1,418 @@
+NOTE: PROCEDURE PRINTTO used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+110        
+111        libname sasout "&dir/sasdata/";
+NOTE: Libref SASOUT was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: /folders/myfolders/Portfolio/SAS_01_Base_Programming/sasdata
+112        
+113        /* Print output to PDF */
+114        ods pdf style = HTMLEncore;
+NOTE: Writing ODS PDF output to DISK destination "/opt/sasinside/SASConfig/Lev1/SASApp/sasprt.pdf", printer "PDF".
+115        ods pdf file = "&dir/ods/ODS_&prjct..pdf" contents=yes;
+NOTE: ODS PDF printed no output. 
+      (This sometimes results from failing to place a RUN statement before the ODS PDF CLOSE statement.)
+NOTE: Writing ODS PDF output to DISK destination 
+2                                                          The SAS System                           Saturday, 10 April 2021 11:53:25
+
+      "/folders/myfolders/Portfolio/SAS_01_Base_Programming/ods/ODS_SAS_01_Base_Programming.pdf", printer "PDF".
+116        
+117        /* Import data */
+118        filename billref "&dir/data/billionaires.csv";
+119        data billionaires (drop = wealth_how_from_emerging wealth_was_founded
+120                                  wealth_was_political);
+121        length name $45.  company_name $59.
+122               company_relationship $46.  company_sector $52.
+123               company_type $22.  gender $14.
+124               location $20.  location_code $6.
+125               region $24.  wealth_type $24.
+126               wealth_how $18.  wealth_how_from_emerging $4.
+127               wealth_how_industry $31.  wealth_inherited $24.
+128               wealth_was_founded $4.  wealth_was_political $4.;
+129        infile billref
+130        	delimiter = ','
+131        	missover
+132        	dsd
+133        	firstobs = 2;
+134        informat location_gdp e14.;
+135        input name $  rank
+136             year  company_founded
+137             company_name $  company_relationship $
+138             company_sector $  company_type $
+139             age  gender $  location $
+140             location_code $  location_gdp
+141             region $  wealth_type $
+142             wealth_bn  wealth_how $
+143             wealth_how_from_emerging $  wealth_how_industry $
+144             wealth_inherited $  wealth_was_founded $
+145             wealth_was_political $ ;
+146        format location_gdp comma20.;
+147        run;
+
+NOTE: The infile BILLREF is:
+      Filename=/folders/myfolders/Portfolio/SAS_01_Base_Programming/data/billionaires.csv,
+      Owner Name=root,Group Name=vboxsf,
+      Access Permission=-rwxrwx---,
+      Last Modified=09 April 2021 18:41:00,
+      File Size (bytes)=607861
+
+NOTE: 2614 records were read from the infile BILLREF.
+      The minimum record length was 154.
+      The maximum record length was 310.
+NOTE: The data set WORK.BILLIONAIRES has 2614 observations and 19 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+      
+
+148        
+149        /* Create a copy of the file */
+150        data sasout.billionaires;
+151        set billionaires;
+152        run;
+
+NOTE: There were 2614 observations read from the data set WORK.BILLIONAIRES.
+NOTE: The data set SASOUT.BILLIONAIRES has 2614 observations and 19 variables.
+3                                                          The SAS System                           Saturday, 10 April 2021 11:53:25
+
+NOTE: DATA statement used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.00 seconds
+      
+
+153        
+154        Title 'Sample of Billionaires Dataset';
+155        proc print data = billionaires (obs=10);
+156        run;
+
+NOTE: There were 10 observations read from the data set WORK.BILLIONAIRES.
+NOTE: PROCEDURE PRINT used (Total process time):
+      real time           0.06 seconds
+      cpu time            0.07 seconds
+      
+
+157        
+158        Title 'Properties of Billionaries Dataset';
+159        proc datasets ;
+160         contents data = billionaires ;
+161        run;
+
+162        
+163        
+164        /* Frequencies of Character Variables */
+165        Title 'Frequencies of Character Variables';
+
+NOTE: PROCEDURE DATASETS used (Total process time):
+      real time           0.08 seconds
+      cpu time            0.06 seconds
+      
+
+166        proc freq data = billionaires(drop = name company_sector
+167                                             company_name) order = freq;
+168            tables _character_;
+169        run;
+
+NOTE: There were 2614 observations read from the data set WORK.BILLIONAIRES.
+NOTE: PROCEDURE FREQ used (Total process time):
+      real time           0.21 seconds
+      cpu time            0.20 seconds
+      
+
+170        
+171        
+172        /* Make Format from Dataset */
+173        proc sort data = billionaires
+174        out = format_tmp(keep = location_code location);
+175            by location_code location;
+176        run;
+
+NOTE: There were 2614 observations read from the data set WORK.BILLIONAIRES.
+NOTE: The data set WORK.FORMAT_TMP has 2614 observations and 2 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+4                                                          The SAS System                           Saturday, 10 April 2021 11:53:25
+
+177        proc sort data = format_tmp nodupkey;
+178            by location_code;
+179        run;
+
+NOTE: There were 2614 observations read from the data set WORK.FORMAT_TMP.
+NOTE: 2540 observations with duplicate key values were deleted.
+NOTE: The data set WORK.FORMAT_TMP has 74 observations and 2 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+180        data format_data;
+181           set format_tmp(rename=(location_code=start
+182                                    location=label))
+183                                    end=last;
+184           retain fmtname '$country_fmt' ;
+185        run;
+
+NOTE: There were 74 observations read from the data set WORK.FORMAT_TMP.
+NOTE: The data set WORK.FORMAT_DATA has 74 observations and 3 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+186        proc format library=work cntlin=format_data;
+NOTE: Format $COUNTRY_FMT has been output.
+187        run;
+
+NOTE: PROCEDURE FORMAT used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.00 seconds
+      
+NOTE: There were 74 observations read from the data set WORK.FORMAT_DATA.
+
+188        
+189        
+190        /* Compile a dataset of Billionaires that appear more than once */
+191        proc sort data = billionaires;
+192           by name year;
+193        run;
+
+NOTE: There were 2614 observations read from the data set WORK.BILLIONAIRES.
+NOTE: The data set WORK.BILLIONAIRES has 2614 observations and 19 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+194        data multiple_appearances (keep = name appearances
+195                                          year_entered most_recent_year
+196                                          wealth_entered most_recent_wealth
+197                                          wealth_chg);
+198            format wealth_entered most_recent_wealth wealth_chg 4.1;
+199            set billionaires;
+200            retain year_entered wealth_entered;
+201            by name;
+5                                                          The SAS System                           Saturday, 10 April 2021 11:53:25
+
+202            if first.name then do;
+203        	    appearances = 0;
+204        	    year_entered = year;
+205        	    wealth_entered = wealth_bn;
+206            end;
+207            appearances + 1;
+208            if last.name and appearances > 1 then do ;
+209                most_recent_year = year;
+210                most_recent_wealth = wealth_bn;
+211                wealth_chg = most_recent_wealth - wealth_entered;
+212                output;
+213            end;
+
+NOTE: There were 2614 observations read from the data set WORK.BILLIONAIRES.
+NOTE: The data set WORK.MULTIPLE_APPEARANCES has 403 observations and 7 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.01 seconds
+      
+
+214        proc sort;
+215            by name;
+216        run;
+
+NOTE: There were 403 observations read from the data set WORK.MULTIPLE_APPEARANCES.
+NOTE: The data set WORK.MULTIPLE_APPEARANCES has 403 observations and 7 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+217        /* Highest Rank */
+218        proc sort data = billionaires;
+219            by name rank;
+220        run;
+
+NOTE: There were 2614 observations read from the data set WORK.BILLIONAIRES.
+NOTE: The data set WORK.BILLIONAIRES has 2614 observations and 19 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.01 seconds
+      
+
+221        data ranks(keep = name highest_rank lowest_rank
+222                          highest_rank_year lowest_rank_year);
+223            retain name highest_rank lowest_rank
+224                   highest_rank_year lowest_rank_year;
+225            set billionaires;
+226            retain highest_rank highest_rank_year;
+227            by name;
+228            if first.name then do;
+229                highest_rank = rank;
+230                highest_rank_year = year;
+231            end;
+232            if last.name then do;
+233                lowest_rank = rank;
+234                lowest_rank_year = year;
+235                output;
+6                                                          The SAS System                           Saturday, 10 April 2021 11:53:25
+
+236            end;
+
+NOTE: There were 2614 observations read from the data set WORK.BILLIONAIRES.
+NOTE: The data set WORK.RANKS has 2077 observations and 5 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+237        proc sort;
+238            by name;
+239        run;
+
+NOTE: There were 2077 observations read from the data set WORK.RANKS.
+NOTE: The data set WORK.RANKS has 2077 observations and 5 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+240        /* Merge two preceding datasets */
+241        data sasout.app_with_ranks(drop=i);
+242            retain name appearances
+243                   highest_rank lowest_rank
+244                   highest_rank_year lowest_rank_year
+245                   year_entered most_recent_year wealth_entered
+246                   most_recent_wealth wealth_chg;
+247            format estimated_wealth 5.1;
+248            merge multiple_appearances (in=a)
+249                  ranks (in=b);
+250            by name;
+251            /* Estimate wealth in 2024, Assumed 5% growth*/
+252            estimated_wealth = most_recent_wealth;
+253            do i=1 to 10;
+254                 estimated_wealth + estimated_wealth * 0.05;
+255            end;
+256            if a and b then output;
+
+NOTE: Missing values were generated as a result of performing an operation on missing values.
+      Each place is given by: (Number of times) at (Line):(Column).
+      16740 at 254:46   
+NOTE: There were 403 observations read from the data set WORK.MULTIPLE_APPEARANCES.
+NOTE: There were 2077 observations read from the data set WORK.RANKS.
+NOTE: The data set SASOUT.APP_WITH_RANKS has 403 observations and 12 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+      
+
+257        proc sort;
+258            by descending appearances highest_rank name;
+259        run;
+
+NOTE: There were 403 observations read from the data set SASOUT.APP_WITH_RANKS.
+NOTE: The data set SASOUT.APP_WITH_RANKS has 403 observations and 12 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.00 seconds
+7                                                          The SAS System                           Saturday, 10 April 2021 11:53:25
+
+      
+
+260        
+261        
+262        /* Number of Billionaires by Country by Year in Wide format */
+263        proc summary data = billionaires nway missing;
+264            var year;
+265            class location year;
+266            output out = long_format(drop=_:) n=billionaires;
+
+NOTE: There were 2614 observations read from the data set WORK.BILLIONAIRES.
+NOTE: The data set WORK.LONG_FORMAT has 155 observations and 3 variables.
+NOTE: PROCEDURE SUMMARY used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+      
+
+267        proc sort;
+268           by location year;
+269        run;
+
+NOTE: There were 155 observations read from the data set WORK.LONG_FORMAT.
+NOTE: The data set WORK.LONG_FORMAT has 155 observations and 3 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.01 seconds
+      
+
+270        proc transpose data = long_format out = country_time_series(drop=_name_);
+271            by location;
+272            var billionaires;
+273            id year;
+274        run;
+
+NOTE: There were 155 observations read from the data set WORK.LONG_FORMAT.
+NOTE: The data set WORK.COUNTRY_TIME_SERIES has 73 observations and 4 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+275        data sasout.country_time_series(rename=(location = country));
+276            retain location _1996 _2001 _2014;
+277            set country_time_series;
+278            array change _numeric_;
+279                do over change;
+280                    if change=. then change=0;
+281                end;
+282        run;
+
+NOTE: There were 73 observations read from the data set WORK.COUNTRY_TIME_SERIES.
+NOTE: The data set SASOUT.COUNTRY_TIME_SERIES has 73 observations and 4 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+283        
+8                                                          The SAS System                           Saturday, 10 April 2021 11:53:25
+
+284        
+285        /* Export analysis to an XSLX workbook that can be distributed */
+286        proc export data = sasout.app_with_ranks
+287            outfile = "&dir/output/Excel_&prjct..xlsx"
+288            dbms = xlsx
+289            replace;
+290            sheet = appearances;
+291        run;
+
+NOTE: The export data set has 403 observations and 12 variables.
+NOTE: "/folders/myfolders/Portfolio/SAS_01_Base_Programming/output/Excel_SAS_01_Base_Programming.xlsx" file was successfully 
+      created.
+NOTE: PROCEDURE EXPORT used (Total process time):
+      real time           0.04 seconds
+      cpu time            0.02 seconds
+      
+
+292        proc export data = sasout.country_time_series
+293            outfile = "&dir/output/Excel_&prjct..xlsx"
+294            dbms = xlsx
+295            replace;
+296            sheet = ctry_series;
+297        run;
+
+NOTE: The export data set has 73 observations and 4 variables.
+NOTE: "/folders/myfolders/Portfolio/SAS_01_Base_Programming/output/Excel_SAS_01_Base_Programming.xlsx" file was successfully 
+      created.
+NOTE: PROCEDURE EXPORT used (Total process time):
+      real time           0.04 seconds
+      cpu time            0.02 seconds
+      
+
+298        
+299        
+300        /* Reset log location */
+301        proc printto log = log;
+302        run;
+
